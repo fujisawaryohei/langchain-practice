@@ -1,7 +1,12 @@
+from dotenv import load_dotenv
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_anthropic import ChatAnthropic
 from langchain_community.document_loaders import GitLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
+
+load_dotenv()
 
 def file_filter(file_path: str) -> bool:
     return file_path.endswith(".md")
@@ -27,4 +32,15 @@ query = "git-flight-rulesってなに？"
 retriever = db.as_retriever()
 context_doc = retriever.invoke(query)
 
-print(context_doc[0].page_content)
+context = "\n\n".join([doc.page_content for doc in context_doc])
+
+model = ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "以下のコンテキストを参考に答えて \n\n{context}"),
+    ("human", "{question}")
+])
+
+chain = prompt | model
+value = chain.invoke({ "question": query })
+
+print(value.content)
