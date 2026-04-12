@@ -41,6 +41,6 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 chain = prompt | model
-value = chain.invoke({ "question": query })
+value = chain.invoke({ "question": query , "context": context })
 
 print(value.content)

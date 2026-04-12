@@ -6,12 +6,15 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "anthropic>=0.85.0",
+    "beautifulsoup4>=4.14.3",
     "gitpython>=3.1.46",
     "langchain>=1.2.12",
     "langchain-anthropic>=1.4.0",
     "langchain-chroma>=1.1.0",
     "langchain-community>=0.4.1",
+    "langchain-huggingface>=1.2.1",
     "langchain-ollama>=1.0.1",
     "langchain-text-splitters>=1.1.1",
     "python-dotenv>=1.2.2",
+    "sentence-transformers>=5.3.0",
 ]
