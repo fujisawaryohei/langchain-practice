@@ -8,14 +8,16 @@ from langchain_chroma import Chroma
 
 load_dotenv()
 
+
 def file_filter(file_path: str) -> bool:
     return file_path.endswith(".md")
+
 
 loader = GitLoader(
     clone_url="https://github.com/k88hudson/git-flight-rules",
     repo_path="./git-flight-rules",
     branch="master",
-    file_filter=file_filter
+    file_filter=file_filter,
 )
 
 raw_docs = loader.load()
@@ -35,12 +37,14 @@ context_doc = retriever.invoke(query)
 context = "\n\n".join([doc.page_content for doc in context_doc])
 
 model = ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "以下のコンテキストを参考に答えて \n\n{context}"),
-    ("human", "{question}")
-])
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "以下のコンテキストを参考に答えて \n\n{context}"),
+        ("human", "{question}"),
+    ]
+)
 
 chain = prompt | model
-value = chain.invoke({ "question": query , "context": context })
+value = chain.invoke({"question": query, "context": context})
 
 print(value.content)

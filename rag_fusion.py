@@ -10,16 +10,19 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+
 class QueryGenerationOutput(BaseModel):
     queries: list[str] = Field(..., description="検索クエリのリスト")
+
 
 def file_filter(file_path: str) -> bool:
     return file_path.endswith(".md")
 
+
 def reciprocal_rank_fusion(
     retriever_outputs: list[list[Document]],
     k: int = 60,
-)->list[str]:
+) -> list[str]:
     content_score_mapping = {}
 
     # 検索クエリごとにループ
@@ -30,17 +33,18 @@ def reciprocal_rank_fusion(
             # 初めて登場したコンテンツの場合はスコアを0で初期化
             if content not in content_score_mapping:
                 content_score_mapping[content] = 0
-            
+
             # (1/(順位+k)のスコアを加算)
             content_score_mapping[content] += 1 / (rank + k)
-    
+
     # スコアの大きい順にソート
     ranked = sorted(content_score_mapping.items(), key=lambda x: x[1], reverse=True)
     return [content for content, _ in ranked]
 
+
 load_dotenv()
 
-model = ChatAnthropic(model="claude-haiku-4-5",temperature=0)
+model = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
 
 query_generation_prompt = ChatPromptTemplate.from_template("""
     質問に対してベクターデータベースから関連文書を検索するために、
@@ -60,15 +64,13 @@ prompt = ChatPromptTemplate.from_template("""
 """)
 
 query_generation_chain = (
-    query_generation_prompt 
+    query_generation_prompt
     | model.with_structured_output(QueryGenerationOutput)
     | (lambda x: x.queries)
 )
 
 loader = GitLoader(
-    repo_path="./repos/langchain",
-    branch="master",
-    file_filter=file_filter
+    repo_path="./repos/langchain", branch="master", file_filter=file_filter
 )
 documents = loader.load()
 
@@ -87,10 +89,15 @@ db = Chroma.from_documents(
 
 retriever = db.as_retriever()
 
-chain = {
-    "question": RunnablePassthrough(),
-    "context": query_generation_chain | retriever.map() | reciprocal_rank_fusion,
-} | prompt | model | StrOutputParser()
+chain = (
+    {
+        "question": RunnablePassthrough(),
+        "context": query_generation_chain | retriever.map() | reciprocal_rank_fusion,
+    }
+    | prompt
+    | model
+    | StrOutputParser()
+)
 
 result = chain.invoke("LangChainの概要を教えて。")
 print(result)

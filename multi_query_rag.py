@@ -11,10 +11,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-model = ChatAnthropic(model="claude-haiku-4-5",temperature=0)
+model = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
+
 
 class QueryGenerationOutput(BaseModel):
     queries: list[str] = Field(..., description="検索クエリのリスト")
+
 
 query_generation_prompt = ChatPromptTemplate.from_template("""
     質問に対してベクターデータベースから関連文書を検索するために、
@@ -34,18 +36,18 @@ prompt = ChatPromptTemplate.from_template("""
 """)
 
 query_generation_chain = (
-    query_generation_prompt 
+    query_generation_prompt
     | model.with_structured_output(QueryGenerationOutput)
     | (lambda x: x.queries)
 )
 
+
 def file_filter(file_path: str) -> bool:
     return file_path.endswith(".md")
 
+
 loader = GitLoader(
-    repo_path="./repos/langchain",
-    branch="master",
-    file_filter=file_filter
+    repo_path="./repos/langchain", branch="master", file_filter=file_filter
 )
 documents = loader.load()
 
@@ -64,10 +66,15 @@ db = Chroma.from_documents(
 
 retriever = db.as_retriever()
 
-chain = {
-    "question": RunnablePassthrough(),
-    "context": query_generation_chain | retriever.map(),
-} | prompt | model | StrOutputParser()
+chain = (
+    {
+        "question": RunnablePassthrough(),
+        "context": query_generation_chain | retriever.map(),
+    }
+    | prompt
+    | model
+    | StrOutputParser()
+)
 
 result = chain.invoke("LangChainの概要を教えて。")
 print(result)

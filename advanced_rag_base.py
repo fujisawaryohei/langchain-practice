@@ -10,13 +10,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def file_filter(file_path: str):
     return file_path.endswith(".md")
 
+
 loader = GitLoader(
-    repo_path="./repos/langchain",
-    branch="master",
-    file_filter=file_filter
+    repo_path="./repos/langchain", branch="master", file_filter=file_filter
 )
 documents = loader.load()
 
@@ -30,7 +30,7 @@ db = Chroma.from_documents(
     documents=documents,
     embedding=embeddings,
     persist_directory="./chroma_db",
-    collection_name = "langchain_docs",
+    collection_name="langchain_docs",
 )
 
 prompt = ChatPromptTemplate.from_template("""
@@ -41,14 +41,19 @@ prompt = ChatPromptTemplate.from_template("""
 質問:{question}
 """)
 
-model = ChatAnthropic(model="claude-haiku-4-5",temperature=0)
+model = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
 
 retriever = db.as_retriever()
 
-chain = {
-    "question": RunnablePassthrough(),
-    "context": retriever,
-} | prompt | model | StrOutputParser()
+chain = (
+    {
+        "question": RunnablePassthrough(),
+        "context": retriever,
+    }
+    | prompt
+    | model
+    | StrOutputParser()
+)
 
 result = chain.invoke("Langchainの概要を教えて。")
 print(result)

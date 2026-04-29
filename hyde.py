@@ -10,13 +10,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def file_filter(file_path: str) -> bool:
     return file_path.endswith(".md")
 
+
 loader = GitLoader(
-    repo_path="./repos/langchain",
-    branch="master",
-    file_filter=file_filter
+    repo_path="./repos/langchain", branch="master", file_filter=file_filter
 )
 documents = loader.load()
 
@@ -47,16 +47,21 @@ prompt = ChatPromptTemplate.from_template("""
 質問:{question}
 """)
 
-model = ChatAnthropic(model="claude-haiku-4-5",temperature=0)
+model = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
 
 hypothentical_chain = hypothentical_prompt | model | StrOutputParser()
 
 retriever = db.as_retriever()
 
-chain = {
-    "question": RunnablePassthrough(),
-    "context": hypothentical_chain | retriever,
-} | prompt | model | StrOutputParser()
+chain = (
+    {
+        "question": RunnablePassthrough(),
+        "context": hypothentical_chain | retriever,
+    }
+    | prompt
+    | model
+    | StrOutputParser()
+)
 
 result = chain.invoke("LangChainの概要を教えて。")
 print(result)

@@ -15,15 +15,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Route(str, Enum):
     langchain_document = "langchain_document"
     web = "web"
 
+
 class RouteOutput(BaseModel):
     route: Route
 
+
 def file_filter(file_path: str) -> bool:
     return file_path.endswith(".md")
+
 
 def routed_retriever(inp: dict[str, Any]) -> list[Document]:
     question = inp["question"]
@@ -36,7 +40,8 @@ def routed_retriever(inp: dict[str, Any]) -> list[Document]:
 
     raise ValueError(f"Unknown retriever: {retriever}")
 
-model = ChatAnthropic(model="claude-haiku-4-5",temperature=0)
+
+model = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
 
 route_prompt = ChatPromptTemplate.from_template("""
 質問に回答するために適切なRetrieverを選択してください。
@@ -53,9 +58,7 @@ prompt = ChatPromptTemplate.from_template("""
 """)
 
 loader = GitLoader(
-    repo_path="./repos/langchain",
-    branch="master",
-    file_filter=file_filter
+    repo_path="./repos/langchain", branch="master", file_filter=file_filter
 )
 documents = loader.load()
 
@@ -75,23 +78,22 @@ db = Chroma.from_documents(
 retriever = db.as_retriever()
 
 langchain_document_retriever = retriever.with_config(
-    { "run_name" : "langchain_document_retriever" }
+    {"run_name": "langchain_document_retriever"}
 )
 
-web_retriever = TavilySearchAPIRetriever(k=3).with_config(
-    { "run_name" : "web_retriever" }
-)
+web_retriever = TavilySearchAPIRetriever(k=3).with_config({"run_name": "web_retriever"})
 
 route_chain = (
-    route_prompt
-    | model.with_structured_output(RouteOutput)
-    | (lambda x: x.route)
+    route_prompt | model.with_structured_output(RouteOutput) | (lambda x: x.route)
 )
 
-chain = {
-    "question": RunnablePassthrough(),
-    "route": route_chain
-} | RunnablePassthrough.assign(context=routed_retriever) | prompt | model | StrOutputParser()
+chain = (
+    {"question": RunnablePassthrough(), "route": route_chain}
+    | RunnablePassthrough.assign(context=routed_retriever)
+    | prompt
+    | model
+    | StrOutputParser()
+)
 
 result = chain.invoke("福岡の明日の天気は？")
 print(result)

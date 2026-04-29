@@ -18,12 +18,9 @@ load_dotenv()
 # print(response.content[0].text)
 
 # ストリーム
-model = ChatAnthropic(model="claude-haiku-4-5",temperature=0)
+model = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
 
-messages = [
-    SystemMessage("You are a helpful assistant."),
-    HumanMessage("こんにちは！")
-]
+messages = [SystemMessage("You are a helpful assistant."), HumanMessage("こんにちは！")]
 
 for chunk in model.stream(messages):
-    print(chunk.content, end="",flush=True)
+    print(chunk.content, end="", flush=True)

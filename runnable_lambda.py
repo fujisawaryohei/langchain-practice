@@ -31,20 +31,29 @@ model = ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
 output_parser = StrOutputParser()
 optimistic_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", "あなたは楽観主義者です。ユーザーの入力に対して楽観的な意見をください。"),
-        ("human", "{topic}")
+        (
+            "system",
+            "あなたは楽観主義者です。ユーザーの入力に対して楽観的な意見をください。",
+        ),
+        ("human", "{topic}"),
     ]
 )
 pessimistic_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", "あなたは悲観主義者です。ユーザーの入力に対して悲観的な意見をください。"),
-        ("human", "{topic}")
+        (
+            "system",
+            "あなたは悲観主義者です。ユーザーの入力に対して悲観的な意見をください。",
+        ),
+        ("human", "{topic}"),
     ]
 )
 synthesize_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", "あなたは客観的AIです。2つの意見をまとめてください。"),
-        ("human", "楽観的意見: {optimistic_opinion}\n悲観的意見: {pessimistic_opinion}")
+        (
+            "human",
+            "楽観的意見: {optimistic_opinion}\n悲観的意見: {pessimistic_opinion}",
+        ),
     ]
 )
 
@@ -52,12 +61,17 @@ optimistic_chain = optimistic_prompt | model | output_parser
 pessimistic_chain = pessimistic_prompt | model | output_parser
 
 
-synthesize_chain = RunnableParallel(
-    {
-        "optimistic_opinion": optimistic_chain,
-        "pessimistic_opinion": pessimistic_chain
-    }
-) | synthesize_prompt | model | output_parser
+synthesize_chain = (
+    RunnableParallel(
+        {
+            "optimistic_opinion": optimistic_chain,
+            "pessimistic_opinion": pessimistic_chain,
+        }
+    )
+    | synthesize_prompt
+    | model
+    | output_parser
+)
 
 output = synthesize_chain.invoke({"topic": "生成AIの進化について"})
 print(output)
