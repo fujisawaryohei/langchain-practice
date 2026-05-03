@@ -19,7 +19,13 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "ragas>=0.4.3",
     "rank-bm25>=0.2.2",
+    "rapidfuzz>=3.14.5",
     "ruff>=0.15.12",
     "sentence-transformers>=5.3.0",
     "tavily-python>=0.7.24",
 ]
+
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = ["ragas.*"]
+ignore_missing_imports = true
